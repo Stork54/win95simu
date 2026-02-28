@@ -79,7 +79,7 @@
 <body>
 
     <div id="power-overlay">
-        <div class="power-btn" onclick="startBoot()">啟動 Windows 95</div>
+        <div class="power-btn" onclick="startBoot()">啟動模擬器官移植</div>
     </div>
 
     <div id="desktop">
@@ -94,14 +94,14 @@
             <div class="title-bar" onmousedown="dragWindow(this)">
                 <span>我的電腦</span>
                 <div class="title-btns">
-                    <div class="win-btn win-outset">_</div>
-                    <div class="win-btn win-outset" onclick="toggleWindow('win-computer')">X</div>
+                    <div class="win-btn win-outset">—</div>
+                    <div class="win-btn win-outset" onclick="toggleWindow('win-computer')">✕</div>
                 </div>
             </div>
             <div class="window-content win-inset">
                 <p>磁碟機 (C:)</p>
                 <p>控制台</p>
-                <p style="color: gray;">此處模擬 1995 年的純真...</p>
+                <p style="color: gray;">作者 Tim</p>
             </div>
         </div>
 
@@ -111,7 +111,7 @@
                 <div style="padding: 5px;">程式集</div>
                 <div style="padding: 5px;">設定</div>
                 <hr>
-                <div style="padding: 5px;" onclick="location.reload()">關機...</div>
+                <div style="padding: 5px;" onclick="location.reload()">關閉模擬器官移植</div>
             </div>
         </div>
 
