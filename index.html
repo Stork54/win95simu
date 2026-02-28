@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Windows 95 經典模擬器</title>
+    <style>
+        :root {
+            --win-gray: #c0c0c0;
+            --win-blue: #000080;
+            --win-border-light: #ffffff;
+            --win-border-dark: #808080;
+            --desktop-bg: #008080;
+        }
+
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: "Tahoma", "MS Sans Serif", sans-serif; cursor: default; }
+
+        /* 電源開關 */
+        #power-overlay {
+            position: fixed; inset: 0; background: #000; color: #0f0; 
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .power-btn { 
+            padding: 20px 40px; border: 4px outset var(--win-gray); background: var(--win-gray); 
+            color: black; cursor: pointer; font-weight: bold; font-size: 20px;
+        }
+
+        /* 桌面 */
+        #desktop { 
+            width: 100vw; height: 100vh; background-color: var(--desktop-bg); 
+            display: none; position: relative; 
+        }
+
+        /* 經典邊框樣式 */
+        .win-outset { border: 2px solid; border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light); }
+        .win-inset { border: 2px solid; border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark); }
+
+        /* 工作列 */
+        #taskbar {
+            position: absolute; bottom: 0; width: 100%; height: 32px;
+            background: var(--win-gray); display: flex; align-items: center;
+            padding: 2px; z-index: 500;
+        }
+
+        #start-btn {
+            height: 26px; font-weight: bold; display: flex; align-items: center;
+            padding: 0 5px; margin-right: 5px; gap: 5px;
+        }
+
+        #clock {
+            margin-left: auto; padding: 0 10px; font-size: 13px;
+            background: var(--win-gray); height: 22px; display: flex; align-items: center;
+        }
+
+        /* 視窗 */
+        .window {
+            position: absolute; width: 350px; background: var(--win-gray);
+            padding: 3px; z-index: 10;
+        }
+
+        .title-bar {
+            height: 20px; background: var(--win-blue); color: white;
+            display: flex; align-items: center; padding: 2px 4px; font-size: 12px; font-weight: bold;
+        }
+
+        .title-btns { margin-left: auto; display: flex; gap: 2px; }
+        .win-btn { width: 16px; height: 14px; background: var(--win-gray); border: 1px solid white; font-size: 9px; text-align: center; line-height: 14px; color: black; }
+
+        .window-content { padding: 20px; background: white; margin-top: 2px; height: 150px; overflow-y: auto; }
+
+        /* 開始功能表 */
+        #start-menu {
+            position: absolute; bottom: 35px; left: 2px; width: 180px;
+            background: var(--win-gray); display: none; z-index: 600;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="power-overlay">
+        <div class="power-btn" onclick="startBoot()">啟動 Windows 95</div>
+    </div>
+
+    <div id="desktop">
+        <div style="padding: 20px;">
+            <div onclick="toggleWindow('win-computer')" style="width: 60px; text-align: center; color: white; cursor: pointer;">
+                <img src="https://win98icons.alexmeub.com/icons/png/computer_explorer-5.png" width="32"><br>
+                <span style="font-size: 12px; background: rgba(0,0,0,0.5);">我的電腦</span>
+            </div>
+        </div>
+
+        <div id="win-computer" class="window win-outset hidden" style="top: 100px; left: 200px;">
+            <div class="title-bar" onmousedown="dragWindow(this)">
+                <span>我的電腦</span>
+                <div class="title-btns">
+                    <div class="win-btn win-outset">_</div>
+                    <div class="win-btn win-outset" onclick="toggleWindow('win-computer')">X</div>
+                </div>
+            </div>
+            <div class="window-content win-inset">
+                <p>磁碟機 (C:)</p>
+                <p>控制台</p>
+                <p style="color: gray;">此處模擬 1995 年的純真...</p>
+            </div>
+        </div>
+
+        <div id="start-menu" class="win-outset">
+            <div style="background: gray; color: white; width: 25px; writing-mode: vertical-lr; transform: rotate(180deg); padding: 10px 2px; font-weight: bold;">Windows 95</div>
+            <div style="flex-grow: 1; padding: 5px;">
+                <div style="padding: 5px;">程式集</div>
+                <div style="padding: 5px;">設定</div>
+                <hr>
+                <div style="padding: 5px;" onclick="location.reload()">關機...</div>
+            </div>
+        </div>
+
+        <div id="taskbar" class="win-outset">
+            <button id="start-btn" class="win-outset" onclick="toggleStartMenu()">
+                <img src="https://win98icons.alexmeub.com/icons/png/windows_slanted-1.png" width="16">
+                開始
+            </button>
+            <div id="clock" class="win-inset">12:00 PM</div>
+        </div>
+    </div>
+
+    <audio id="snd-start" src="https://www.winhistory.de/more/winstart/mp3/win95.mp3"></audio>
+    <audio id="snd-click" src="https://winsounds.com/wp-content/uploads/2015/01/Windows-Navigation-Start.mp3"></audio>
+
+    <script>
+        const sndStart = document.getElementById('snd-start');
+        const sndClick = document.getElementById('snd-click');
+
+        function startBoot() {
+            document.getElementById('power-overlay').innerHTML = "載入中...";
+            sndStart.play();
+            
+            setTimeout(() => {
+                document.getElementById('power-overlay').style.display = 'none';
+                document.getElementById('desktop').style.display = 'block';
+                updateClock();
+            }, 4000);
+        }
+
+        function toggleWindow(id) {
+            sndClick.play();
+            const win = document.getElementById(id);
+            win.classList.toggle('hidden');
+        }
+
+        function toggleStartMenu() {
+            sndClick.play();
+            const menu = document.getElementById('start-menu');
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            setTimeout(updateClock, 60000);
+        }
+
+        // 簡單的拖曳實作
+        function dragWindow(el) {
+            const win = el.parentElement;
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            
+            el.onmousedown = (e) => {
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = () => {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                };
+                document.onmousemove = (e) => {
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    win.style.top = (win.offsetTop - pos2) + "px";
+                    win.style.left = (win.offsetLeft - pos1) + "px";
+                };
+            };
+        }
+    </script>
+</body>
+</html>
+
